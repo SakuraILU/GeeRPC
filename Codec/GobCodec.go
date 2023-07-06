@@ -7,8 +7,6 @@ import (
 )
 
 type GobCodec struct {
-	baseCodec
-
 	stream io.ReadWriter
 	dec    *gob.Decoder
 	enc    *gob.Encoder

@@ -6,8 +6,6 @@ import (
 )
 
 type JsonCodec struct {
-	baseCodec
-
 	stream io.ReadWriter
 	dec    *json.Decoder
 	enc    *json.Encoder
