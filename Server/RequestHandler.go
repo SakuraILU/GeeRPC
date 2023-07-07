@@ -20,21 +20,14 @@ func NewRequestHandler(conn net.Conn) (rh *RequestHandler, err error) {
 		log.Println("Init request handler failed")
 		return nil, err
 	}
-	var codecer codec.ICodec
-	switch opt.Codec_type {
-	case codec.GOBTYPE:
-		codecer, err = codec.NewGobCodec(conn), nil
-	case codec.JSONTYPE:
-		codecer, err = codec.NewJsonCodec(conn), nil
-	}
-	if err != nil {
-		log.Println("Init request handler failed")
-		return nil, err
-	}
 
+	codec_newfun, ok := codec.CodecNewFuncs[opt.Codec_type]
+	if !ok {
+		log.Fatal("wrong opt type")
+	}
 	rh = &RequestHandler{
 		conn:    conn,
-		codecer: codecer,
+		codecer: codec_newfun(conn),
 	}
 
 	return rh, nil

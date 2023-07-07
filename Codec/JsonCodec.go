@@ -11,7 +11,7 @@ type JsonCodec struct {
 	enc    *json.Encoder
 }
 
-func NewJsonCodec(stream io.ReadWriter) *JsonCodec {
+func NewJsonCodec(stream io.ReadWriter) ICodec {
 	return &JsonCodec{
 		stream: stream,
 		dec:    json.NewDecoder(stream),

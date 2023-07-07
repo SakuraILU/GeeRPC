@@ -5,14 +5,17 @@ import (
 )
 
 type Server struct {
+	conn net.Conn
 }
 
-func NewServer() *Server {
-	return &Server{}
+func NewServer(conn net.Conn) *Server {
+	return &Server{
+		conn: conn,
+	}
 }
 
-func (s *Server) Serve(conn net.Conn) (err error) {
-	rh, err := NewRequestHandler(conn)
+func (s *Server) Serve() (err error) {
+	rh, err := NewRequestHandler(s.conn)
 	if err != nil {
 		return err
 	}

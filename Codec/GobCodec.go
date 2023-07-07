@@ -12,7 +12,7 @@ type GobCodec struct {
 	enc    *gob.Encoder
 }
 
-func NewGobCodec(stream io.ReadWriter) *GobCodec {
+func NewGobCodec(stream io.ReadWriter) ICodec {
 	return &GobCodec{
 		stream: stream,
 		dec:    gob.NewDecoder(stream),
