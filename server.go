@@ -16,11 +16,10 @@ func startServer() {
 	}
 	log.Println("service is listen on", listen_conn.Addr())
 
-	conn, err := listen_conn.Accept()
 	if err != nil {
 		log.Println(err)
 	}
 
-	svic := server.NewServer(conn)
-	svic.Serve()
+	svic := server.NewServer()
+	svic.Serve(listen_conn)
 }

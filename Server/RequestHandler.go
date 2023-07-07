@@ -6,11 +6,12 @@ import (
 	"log"
 	"net"
 	"reflect"
+	"sync"
 )
 
 type RequestHandler struct {
-	conn    net.Conn
-	codecer codec.ICodec
+	codecer  codec.ICodec
+	sendlock sync.RWMutex
 }
 
 func NewRequestHandler(conn net.Conn) (rh *RequestHandler, err error) {
@@ -26,7 +27,6 @@ func NewRequestHandler(conn net.Conn) (rh *RequestHandler, err error) {
 		log.Fatal("wrong opt type")
 	}
 	rh = &RequestHandler{
-		conn:    conn,
 		codecer: codec_newfun(conn),
 	}
 
@@ -53,6 +53,9 @@ func (rh *RequestHandler) Read() (r *codec.Request, err error) {
 }
 
 func (rh *RequestHandler) Write(head *codec.Head, body interface{}) (err error) {
+	rh.sendlock.Lock()
+	defer rh.sendlock.Unlock()
+
 	err = rh.codecer.Write(head, body)
 	return
 }

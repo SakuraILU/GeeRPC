@@ -1,27 +1,30 @@
 package server
 
 import (
+	"log"
 	"net"
 )
 
 type Server struct {
-	conn net.Conn
 }
 
-func NewServer(conn net.Conn) *Server {
-	return &Server{
-		conn: conn,
-	}
+func NewServer() *Server {
+	return &Server{}
 }
 
-func (s *Server) Serve() (err error) {
-	rh, err := NewRequestHandler(s.conn)
-	if err != nil {
-		return err
-	}
+func (s *Server) Serve(listen_conn net.Listener) (err error) {
 	for {
-		if err = rh.Handle(); err != nil {
-			return
+		conn, err := listen_conn.Accept()
+		if err != nil {
+			log.Fatal(err)
+			break
 		}
+
+		connection := NewConnection(conn)
+		go func() {
+			connection.Start()
+			defer connection.Stop()
+		}()
 	}
+	return
 }

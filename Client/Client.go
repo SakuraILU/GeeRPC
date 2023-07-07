@@ -11,7 +11,7 @@ import (
 
 type Client struct {
 	conn     net.Conn
-	connlock sync.RWMutex
+	sendlock sync.RWMutex
 
 	seq_id uint
 	idlock sync.RWMutex
@@ -28,7 +28,7 @@ func NewClient(conn net.Conn, tp codec.CodecType) *Client {
 	}
 	return &Client{
 		conn:     conn,
-		connlock: sync.RWMutex{},
+		sendlock: sync.RWMutex{},
 		seq_id:   0,
 		idlock:   sync.RWMutex{},
 		cm:       NewCallManager(conn, tp),
@@ -64,7 +64,7 @@ func (c *Client) Call(service_method string, args interface{}, reply interface{}
 		return
 	}
 
-	withLock(&c.connlock,
+	withLock(&c.sendlock,
 		func() {
 			if err = c.cm.codecr.Write(call.Head, call.Argv); err != nil {
 				if err = c.cm.RemoveCall(call.Head.Service_id); err != nil {
