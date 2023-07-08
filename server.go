@@ -4,7 +4,51 @@ import (
 	server "grpc/Server"
 	"log"
 	"net"
+	"strings"
 )
+
+// define a simple add struct service
+
+type Str struct {
+}
+
+func (s *Str) Lower2upper(argv string, reply *string) error {
+	// convert lower case to upper case
+	*reply = strings.ToUpper(argv)
+	return nil
+}
+
+func (s *Str) Upper2lower(argv string, reply *string) error {
+	// convert upper case to lower case
+	*reply = strings.ToLower(argv)
+	return nil
+}
+
+func (s *Str) Reverse(argv string, reply *string) error {
+	// reverse string
+	*reply = ""
+	for i := len(argv) - 1; i >= 0; i-- {
+		*reply += string(argv[i])
+	}
+	return nil
+}
+
+type Sort struct {
+}
+
+func (s *Sort) BubbleSort(argv []int, reply *[]int) error {
+	// bubble sort
+	*reply = make([]int, len(argv))
+	copy(*reply, argv)
+	for i := 0; i < len(*reply); i++ {
+		for j := i + 1; j < len(*reply); j++ {
+			if (*reply)[i] > (*reply)[j] {
+				(*reply)[i], (*reply)[j] = (*reply)[j], (*reply)[i]
+			}
+		}
+	}
+	return nil
+}
 
 func startServer() {
 	// short path
@@ -20,6 +64,8 @@ func startServer() {
 		log.Println(err)
 	}
 
-	svic := server.NewServer()
-	svic.Serve(listen_conn)
+	sver := server.NewServer()
+	sver.RegisterService(&Str{})
+	sver.RegisterService(&Sort{})
+	sver.Serve(listen_conn)
 }

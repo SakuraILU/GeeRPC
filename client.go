@@ -29,11 +29,15 @@ func startClient() {
 		go func() {
 			for i := 0; i < 15; i++ {
 				var reply string
-				err = client.Call("T.ping", "hello", &reply)
+				err = client.Call("Str.Reverse", "hello", &reply)
 				fmt.Println(reply)
 				if err != nil {
 					log.Fatal(err)
 				}
+				args := []int{1, 3, 2, 4, 5, 6, 7, 8, 9, 0}
+				reply2 := make([]int, len(args))
+				err = client.Call("Sort.BubbleSort", args, &reply2)
+				fmt.Println(reply2)
 				time.Sleep(time.Second * 2)
 			}
 			wg.Done()

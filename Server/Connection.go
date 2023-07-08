@@ -1,17 +1,18 @@
 package server
 
 import (
-	"fmt"
+	service "grpc/Service"
+	"io"
 	"log"
 	"net"
 )
 
 type Connection struct {
-	rh *RequestHandler
+	rh *RequestReadWriter
 }
 
-func NewConnection(conn net.Conn) *Connection {
-	rh, err := NewRequestHandler(conn)
+func NewConnection(conn net.Conn, svices map[string]*service.Service) *Connection {
+	rh, err := NewRequestReadWriter(conn, svices)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,20 +24,31 @@ func NewConnection(conn net.Conn) *Connection {
 
 func (c *Connection) Start() {
 	for {
-		req, err := c.rh.Read()
-		if err != nil && req != nil {
+		req, svice, method, err := c.rh.ReadAndParse()
+		if err != nil {
 			req.Head.Error = err.Error()
 			if err = c.rh.Write(&req.Head, struct{}{}); err != nil {
-				log.Fatal(err)
+				if err == io.EOF {
+					// client may close connection, so we just log the error and return
+					log.Println(err)
+					return
+				} else {
+					// other error may be caused by server, so we log and fatal, defense coding
+					log.Fatal(err)
+				}
 			}
+			continue
 		}
 
+		// TODO: goroutine worker pool
+		// async handle request
 		go func() {
-			// TODO: handle request
-			// now just reply a message to client, assume the argv is string
-			reply := fmt.Sprintf("grpc: pong %d", req.Head.Service_id)
-			if err = c.rh.Write(&req.Head, reply); err != nil {
-				return
+			if err := svice.Call(method, req.Argv, req.Replyv); err != nil {
+				req.Head.Error = err.Error()
+			}
+
+			if err = c.rh.Write(&req.Head, req.Replyv.Interface()); err != nil {
+				log.Fatal(err)
 			}
 		}()
 	}

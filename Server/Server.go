@@ -1,15 +1,20 @@
 package server
 
 import (
+	"fmt"
+	service "grpc/Service"
 	"log"
 	"net"
 )
 
 type Server struct {
+	svices map[string]*service.Service
 }
 
 func NewServer() *Server {
-	return &Server{}
+	return &Server{
+		svices: make(map[string]*service.Service),
+	}
 }
 
 func (s *Server) Serve(listen_conn net.Listener) (err error) {
@@ -20,11 +25,26 @@ func (s *Server) Serve(listen_conn net.Listener) (err error) {
 			break
 		}
 
-		connection := NewConnection(conn)
+		connection := NewConnection(conn, s.svices)
 		go func() {
 			connection.Start()
 			defer connection.Stop()
 		}()
 	}
+
+	return
+}
+
+func (s *Server) RegisterService(any interface{}) (err error) {
+	svice, err := service.NewService(any)
+	if err != nil {
+		return
+	}
+
+	if _, ok := s.svices[svice.GetName()]; ok {
+		return fmt.Errorf("service %s already registered", svice.GetName())
+	}
+	s.svices[svice.GetName()] = svice
+
 	return
 }
