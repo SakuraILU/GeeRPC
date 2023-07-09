@@ -2,7 +2,6 @@ package server
 
 import (
 	service "grpc/Service"
-	"io"
 	"log"
 	"net"
 	"time"
@@ -27,17 +26,14 @@ func (c *Connection) Start() {
 	for {
 		req, svice, method, err := c.rh.ReadAndParse()
 		if err != nil {
-			if err == io.EOF {
-				// client close connection and trigger EOF error,
-				// so we just log the error and return
-				log.Println(err)
-				return
-			}
-			req.Head.Error = err.Error()
-			if err = c.rh.Write(&req.Head, struct{}{}); err != nil {
-				log.Fatal(err)
-			}
-			continue
+			// some demostration about error:
+			// client close connection
+			// 1. before ReadHead and ReadBody
+			//    EOF error
+			// 2. before send Error response back to client if some error occurs
+			//    write to closed connection error
+			log.Println("Connection closed")
+			return
 		}
 
 		// TODO: goroutine worker pool

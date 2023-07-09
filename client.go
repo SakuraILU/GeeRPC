@@ -15,7 +15,10 @@ func startClient() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	client, err := client.NewClient("tcp", "127.0.0.1:10000", opt)
+
+	addrs := []string{"127.0.0.1:10000", "127.0.0.1:10001",
+		"127.0.0.1:10002"}
+	client, err := client.NewXClient("tcp", addrs, opt)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -3,8 +3,10 @@ package main
 import (
 	server "grpc/Server"
 	"log"
+	"math/rand"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -39,7 +41,9 @@ type Sort struct {
 
 func (s *Sort) BubbleSort(argv []int, reply *[]int) error {
 	// bubble sort
-	time.Sleep(10 * time.Second)
+	// randomly sleep 1~3 seconds
+	rand.Seed(time.Now().UnixNano())
+	time.Sleep(time.Second * time.Duration(rand.Intn(6)))
 	*reply = make([]int, len(argv))
 	copy(*reply, argv)
 	for i := 0; i < len(*reply); i++ {
@@ -53,19 +57,26 @@ func (s *Sort) BubbleSort(argv []int, reply *[]int) error {
 }
 
 func startServer() {
-	listen_conn, err := net.Listen("tcp", "127.0.0.1:10000")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	log.Println("service is listen on", listen_conn.Addr())
+	addrs := []string{"127.0.0.1:10000", "127.0.0.1:10001",
+		"127.0.0.1:10002"}
 
-	if err != nil {
-		log.Println(err)
+	wg := sync.WaitGroup{}
+	wg.Add(len(addrs))
+	for _, addr := range addrs {
+		go func(addr string) {
+			lis, err := net.Listen("tcp", addr)
+			if err != nil {
+				log.Fatal(err)
+			}
+			s := server.NewServer()
+			s.RegisterService(&Str{})
+			s.RegisterService(&Sort{})
+			err = s.Serve(lis)
+			if err != nil {
+				log.Fatal(err)
+			}
+			wg.Done()
+		}(addr)
 	}
-
-	sver := server.NewServer()
-	sver.RegisterService(&Str{})
-	sver.RegisterService(&Sort{})
-	sver.Serve(listen_conn)
+	wg.Wait()
 }

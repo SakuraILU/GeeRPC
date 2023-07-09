@@ -47,7 +47,8 @@ func (rh *RequestReadWriter) ReadAndParse() (req *codec.Request, svice *service.
 		// send error msg back to client
 		req.Head.Error = msg
 		if err = rh.Write(&req.Head, struct{}{}); err != nil {
-			log.Fatal(err)
+			// client may close connection, so we just log the error and return
+			log.Println(err)
 		}
 		return fmt.Errorf(msg)
 	}
