@@ -1,25 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	client "grpc/Client"
 	codec "grpc/Codec"
 	"log"
-	"net"
 	"sync"
 	"time"
 )
 
 func startClient() {
-	// connect to server
-	conn, err := net.Dial("tcp", "127.0.0.1:10000")
+	opt, err := codec.NewOption(codec.GOBTYPE, time.Second*3, time.Second*3)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
-	log.Println("connect to server success")
-	// send option
-	client := client.NewClient(conn, codec.GOBTYPE)
+	client, err := client.NewClient("tcp", "127.0.0.1:10000", opt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	client.Start()
 	defer client.Stop()
 
@@ -29,14 +29,16 @@ func startClient() {
 		go func() {
 			for i := 0; i < 15; i++ {
 				var reply string
-				err = client.Call("Str.Reverse", "hello", &reply)
+				ctx, _ := context.WithTimeout(context.Background(), opt.ConnTimeout)
+				err = client.Call(ctx, "Str.Reverse", "hello", &reply)
 				fmt.Println(reply)
 				if err != nil {
 					log.Fatal(err)
 				}
 				args := []int{1, 3, 2, 4, 5, 6, 7, 8, 9, 0}
 				reply2 := make([]int, len(args))
-				err = client.Call("Sort.BubbleSort", args, &reply2)
+				ctx, _ = context.WithTimeout(context.Background(), opt.ConnTimeout)
+				err = client.Call(ctx, "Sort.BubbleSort", args, &reply2)
 				fmt.Println(reply2)
 				time.Sleep(time.Second * 2)
 			}

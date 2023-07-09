@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"time"
 )
 
 const MAGICNUM = 0x114514
@@ -29,11 +30,13 @@ func (c CodecType) String() (name string) {
 }
 
 type Option struct {
-	Magic_num  int
-	Codec_type CodecType
+	Magic_num     int
+	Codec_type    CodecType
+	ConnTimeout   time.Duration // 0 means no timeout
+	HandleTimeout time.Duration
 }
 
-func NewOption(tp CodecType) (*Option, error) {
+func NewOption(tp CodecType, connTimeout, handleTimeout time.Duration) (*Option, error) {
 	if (tp != GOBTYPE) && (tp != JSONTYPE) {
 		err_msg := fmt.Sprintf("ERROR: unsupported type %s, only support %s and %s", tp, GOBTYPE, JSONTYPE)
 		log.Println(err_msg)
@@ -41,8 +44,10 @@ func NewOption(tp CodecType) (*Option, error) {
 	}
 
 	return &Option{
-		Magic_num:  MAGICNUM,
-		Codec_type: tp,
+		Magic_num:     MAGICNUM,
+		Codec_type:    tp,
+		ConnTimeout:   connTimeout,
+		HandleTimeout: handleTimeout,
 	}, nil
 }
 

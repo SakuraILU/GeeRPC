@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 )
 
 // define a simple add struct service
@@ -38,6 +39,7 @@ type Sort struct {
 
 func (s *Sort) BubbleSort(argv []int, reply *[]int) error {
 	// bubble sort
+	time.Sleep(10 * time.Second)
 	*reply = make([]int, len(argv))
 	copy(*reply, argv)
 	for i := 0; i < len(*reply); i++ {
@@ -51,8 +53,6 @@ func (s *Sort) BubbleSort(argv []int, reply *[]int) error {
 }
 
 func startServer() {
-	// short path
-
 	listen_conn, err := net.Listen("tcp", "127.0.0.1:10000")
 	if err != nil {
 		log.Println(err)

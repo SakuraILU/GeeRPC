@@ -9,12 +9,15 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 )
 
 type RequestReadWriter struct {
 	codecer  codec.ICodec
 	sendlock sync.RWMutex
-	svices   map[string]*service.Service
+	timeout  time.Duration
+
+	svices map[string]*service.Service
 }
 
 func NewRequestReadWriter(conn net.Conn, svices map[string]*service.Service) (rh *RequestReadWriter, err error) {
@@ -30,8 +33,10 @@ func NewRequestReadWriter(conn net.Conn, svices map[string]*service.Service) (rh
 		log.Fatal("wrong codec type")
 	}
 	rh = &RequestReadWriter{
-		codecer: codec_newfun(conn),
-		svices:  svices,
+		codecer:  codec_newfun(conn),
+		sendlock: sync.RWMutex{},
+		timeout:  opt.HandleTimeout,
+		svices:   svices,
 	}
 
 	return rh, nil
@@ -99,4 +104,8 @@ func (rh *RequestReadWriter) Write(head *codec.Head, body interface{}) (err erro
 
 	err = rh.codecer.Write(head, body)
 	return
+}
+
+func (rh *RequestReadWriter) GetTimeout() time.Duration {
+	return rh.timeout
 }

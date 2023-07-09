@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	codec "grpc/Codec"
@@ -18,21 +19,25 @@ type Client struct {
 	cm     *CallManager
 }
 
-func NewClient(conn net.Conn, tp codec.CodecType) *Client {
-	opt, err := codec.NewOption(tp)
+func NewClient(network, addr string, opt *codec.Option) (c *Client, err error) {
+	var conn net.Conn
+	conn, err = net.DialTimeout(network, addr, opt.ConnTimeout)
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
+
 	if err = json.NewEncoder(conn).Encode(&opt); err != nil {
 		log.Fatal(err)
 	}
-	return &Client{
+	c = &Client{
 		conn:     conn,
 		sendlock: sync.RWMutex{},
 		seq_id:   0,
 		idlock:   sync.RWMutex{},
-		cm:       NewCallManager(conn, tp),
+		cm:       NewCallManager(conn, opt.Codec_type),
 	}
+	return
 }
 
 func (c *Client) Start() {
@@ -43,7 +48,7 @@ func (c *Client) Stop() {
 	c.cm.Stop()
 }
 
-func (c *Client) Call(service_method string, args interface{}, reply interface{}) (err error) {
+func (c *Client) Call(ctx context.Context, service_method string, args interface{}, reply interface{}) (err error) {
 	var call *Call
 	withLock(&c.idlock,
 		func() {
@@ -74,9 +79,14 @@ func (c *Client) Call(service_method string, args interface{}, reply interface{}
 			}
 		})
 
-	<-call.Done_chan
-	if call.Head.Error != "" {
-		err = fmt.Errorf("ret error")
+	select {
+	case <-ctx.Done():
+		err = fmt.Errorf("call timeout")
+		c.cm.RemoveCall(call.Head.Service_id)
+	case <-call.Done_chan:
+		if call.Head.Error != "" {
+			err = fmt.Errorf(call.Head.Error)
+		}
 	}
 
 	return

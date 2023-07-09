@@ -94,15 +94,19 @@ func (cm *CallManager) receiver() {
 			if err = cm.codecr.ReadHead(&head); err != nil {
 				log.Fatal("receiver read head")
 			}
-			if head.Error != "" {
-				log.Fatalf("%s", head.Error)
-			}
 
 			withLock(&cm.maplock,
 				func() {
+					if head.Error != "" {
+						log.Printf("id %d error: %s\n", head.Service_id, head.Error)
+						cm.codecr.ReadBody(nil)
+						return
+					}
 					call, ok := cm.calls[head.Service_id]
 					if !ok {
-						log.Fatalf("id %d is not exist", head.Service_id)
+						log.Printf("id %d is not exist, may timeout\n", head.Service_id)
+						cm.codecr.ReadBody(nil)
+						return
 					}
 
 					if err = cm.codecr.ReadBody(call.Reply); err != nil {
