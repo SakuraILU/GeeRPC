@@ -30,13 +30,13 @@ func (c CodecType) String() (name string) {
 }
 
 type Option struct {
-	Magic_num     int
-	Codec_type    CodecType
-	ConnTimeout   time.Duration // 0 means no timeout
-	HandleTimeout time.Duration
+	Magic_num      int
+	Codec_type     CodecType
+	Conn_timeout   time.Duration // 0 means no timeout
+	Handle_timeout time.Duration
 }
 
-func NewOption(tp CodecType, connTimeout, handleTimeout time.Duration) (*Option, error) {
+func NewOption(tp CodecType, conn_timeout, handle_timeout time.Duration) (*Option, error) {
 	if (tp != GOBTYPE) && (tp != JSONTYPE) {
 		err_msg := fmt.Sprintf("ERROR: unsupported type %s, only support %s and %s", tp, GOBTYPE, JSONTYPE)
 		log.Println(err_msg)
@@ -44,10 +44,10 @@ func NewOption(tp CodecType, connTimeout, handleTimeout time.Duration) (*Option,
 	}
 
 	return &Option{
-		Magic_num:     MAGICNUM,
-		Codec_type:    tp,
-		ConnTimeout:   connTimeout,
-		HandleTimeout: handleTimeout,
+		Magic_num:      MAGICNUM,
+		Codec_type:     tp,
+		Conn_timeout:   conn_timeout,
+		Handle_timeout: handle_timeout,
 	}, nil
 }
 

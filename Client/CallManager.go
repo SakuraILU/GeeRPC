@@ -63,7 +63,13 @@ func (cm *CallManager) RemoveCall(id uint) (err error) {
 	withLock(&cm.maplock,
 		func() {
 			if _, ok := cm.calls[id]; !ok {
-				log.Fatal("remove: id not exist, something wrong")
+				// Fix a bug: repeted remove may happen indeed
+				// situation: client timeout (need to remove call), [in Client.Call(), ctx->Done()]
+				//			  meanwhile, server send reply (need to remove call) at the same time. [in Client.receiver()]
+				// so, we just log and return, don't fatal it.
+				// log.Fatalf("remove: id %d not exist, something wrong", id)
+				log.Printf("remove: id %d not exist, may timeout and receive reply at the same time\n", id)
+				return
 			}
 			delete(cm.calls, id)
 		})

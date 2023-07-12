@@ -43,7 +43,7 @@ func (s *Sort) BubbleSort(argv []int, reply *[]int) error {
 	// bubble sort
 	// randomly sleep 1~3 seconds
 	rand.Seed(time.Now().UnixNano())
-	time.Sleep(time.Second * time.Duration(rand.Intn(6)))
+	time.Sleep(time.Second * time.Duration(rand.Intn(5)))
 	*reply = make([]int, len(argv))
 	copy(*reply, argv)
 	for i := 0; i < len(*reply); i++ {
@@ -57,12 +57,9 @@ func (s *Sort) BubbleSort(argv []int, reply *[]int) error {
 }
 
 func startServer() {
-	addrs := []string{"127.0.0.1:10000", "127.0.0.1:10001",
-		"127.0.0.1:10002"}
-
 	wg := sync.WaitGroup{}
-	wg.Add(len(addrs))
-	for _, addr := range addrs {
+	wg.Add(len(saddrs))
+	for _, addr := range saddrs {
 		go func(addr string) {
 			lis, err := net.Listen("tcp", addr)
 			if err != nil {
@@ -71,7 +68,7 @@ func startServer() {
 			s := server.NewServer()
 			s.RegisterService(&Str{})
 			s.RegisterService(&Sort{})
-			err = s.Serve(lis)
+			err = s.Serve(lis, "http://127.0.0.1:9999/grpc/registry", 5*time.Second)
 			if err != nil {
 				log.Fatal(err)
 			}

@@ -11,7 +11,7 @@ import (
 
 type XClient struct {
 	clients map[string]*Client
-	lb      *loadbalance.LoadBalance
+	lb      loadbalance.ILoadBalance
 }
 
 func NewXClient(network string, addrs []string, opt *codec.Option) (xc *XClient, err error) {
@@ -22,6 +22,29 @@ func NewXClient(network string, addrs []string, opt *codec.Option) (xc *XClient,
 
 	for _, addr := range addrs {
 		c, err := NewClient(network, addr, opt)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		xc.clients[addr] = c
+	}
+	return
+}
+
+func NewXClientRegistry(raddr string, opt *codec.Option) (xc *XClient, err error) {
+	xc = &XClient{
+		clients: make(map[string]*Client),
+		lb:      loadbalance.NewRegistryLoadBalance(raddr, loadbalance.ROUNDROBIN),
+	}
+
+	addrs, err := xc.lb.GetAll()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, addr := range addrs {
+		c, err := NewClient("tcp", addr, opt)
 		if err != nil {
 			log.Println(err)
 		}

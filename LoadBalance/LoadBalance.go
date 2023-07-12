@@ -41,10 +41,11 @@ func (lb *LoadBalance) Refresh() error {
 	return nil
 }
 
-func (lb *LoadBalance) UpdateAll(addrs []string, err error) {
+func (lb *LoadBalance) UpdateAll(addrs []string) (err error) {
 	lb.lock.Lock()
 	defer lb.lock.Unlock()
 	lb.addrs = addrs
+	return
 }
 
 func (lb *LoadBalance) Get() (addr string, err error) {

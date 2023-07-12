@@ -2,9 +2,11 @@ package server
 
 import (
 	"fmt"
+	registry "grpc/Registry"
 	service "grpc/Service"
 	"log"
 	"net"
+	"time"
 )
 
 type Server struct {
@@ -17,7 +19,9 @@ func NewServer() *Server {
 	}
 }
 
-func (s *Server) Serve(listen_conn net.Listener) (err error) {
+func (s *Server) Serve(listen_conn net.Listener, registry_addr string, timeout time.Duration) (err error) {
+	go registry.HeartBeat(listen_conn.Addr().String(), registry_addr, timeout)
+
 	for {
 		conn, err := listen_conn.Accept()
 		if err != nil {

@@ -11,10 +11,11 @@ type Call struct {
 	Done_chan chan bool
 }
 
-func NewCall(head *codec.Head, body interface{}) *Call {
+func NewCall(head *codec.Head, argv interface{}, reply interface{}) *Call {
 	return &Call{
 		Head:      head,
-		Argv:      body,
+		Argv:      argv,
+		Reply:     reply,
 		Done_chan: make(chan bool),
 	}
 }

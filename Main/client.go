@@ -11,14 +11,15 @@ import (
 )
 
 func startClient() {
-	opt, err := codec.NewOption(codec.GOBTYPE, time.Second*3, time.Second*3)
+	// in sever, we set a sleep random 0~6 in Sort.BubbleSort,
+	// so timeout 4 may cause timeout error and kill the goroutine
+	opt, err := codec.NewOption(codec.GOBTYPE, time.Second*4, time.Second*10)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	addrs := []string{"127.0.0.1:10000", "127.0.0.1:10001",
-		"127.0.0.1:10002"}
-	client, err := client.NewXClient("tcp", addrs, opt)
+	// the http path of registry is raddr + rpath
+	client, err := client.NewXClientRegistry("http://"+raddr+rpath, opt)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,7 +33,7 @@ func startClient() {
 		go func() {
 			for i := 0; i < 15; i++ {
 				var reply string
-				ctx, _ := context.WithTimeout(context.Background(), opt.ConnTimeout)
+				ctx, _ := context.WithTimeout(context.Background(), opt.Conn_timeout)
 				err = client.Call(ctx, "Str.Reverse", "hello", &reply)
 				fmt.Println(reply)
 				if err != nil {
@@ -40,8 +41,11 @@ func startClient() {
 				}
 				args := []int{1, 3, 2, 4, 5, 6, 7, 8, 9, 0}
 				reply2 := make([]int, len(args))
-				ctx, _ = context.WithTimeout(context.Background(), opt.ConnTimeout)
-				err = client.Call(ctx, "Sort.BubbleSort", args, &reply2)
+				ctx, _ = context.WithTimeout(context.Background(), opt.Conn_timeout)
+				err = client.BroadCastctx(ctx, "Sort.BubbleSort", args, &reply2)
+				if err != nil {
+					log.Fatal(err)
+				}
 				fmt.Println(reply2)
 				time.Sleep(time.Second * 2)
 			}

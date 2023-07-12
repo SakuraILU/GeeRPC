@@ -35,7 +35,7 @@ func NewRequestReadWriter(conn net.Conn, svices map[string]*service.Service) (rh
 	rh = &RequestReadWriter{
 		codecer:  codec_newfun(conn),
 		sendlock: sync.RWMutex{},
-		timeout:  opt.HandleTimeout,
+		timeout:  opt.Handle_timeout,
 		svices:   svices,
 	}
 
