@@ -22,6 +22,10 @@ func NewMethod(method reflect.Method) *Method {
 }
 
 func (m *Method) NewArgv() (argv reflect.Value) {
+	// One thing worth noting: we don't need to care about Slice or Map,
+	// because after we create refargv, we will convert it to argvp interface{} (if not a ptr type, cvt2ptr type)
+	// and call ReadBody(arvp), which will call gob.Decode(arvp), it will create a new slice or map for us if necessary
+	// but in NewReply(), no one will do this for us, so we need to do it by ourselves in NewReply()
 	if m.Argt.Kind() == reflect.Ptr {
 		// m.argt    -->  .Elem()  -->   relect.New
 		// 	*int type     int type	     *int value
@@ -48,9 +52,6 @@ func (m *Method) NewReply() (replyv reflect.Value) {
 	case reflect.Map:
 		// arr := make(map[int]string)
 		replyv.Elem().Set(reflect.MakeMap(m.Replyt.Elem()))
-		// case reflect.Chan:
-		// arr := make(chan bool, 0)
-		// replyv.Set(reflect.MakeChan(m.replyt.Elem(), 0))
 	}
 	return
 }
